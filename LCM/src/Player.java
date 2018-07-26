@@ -158,7 +158,7 @@ class Command{
 		this.type = type;
 		this.a = a;
 		this.b = b;
-		if(this.b == null) {
+		if(this.b == null) { // null Card b means to attack opponent
 			attackOp = true;
 		}
 	}
