@@ -6,12 +6,12 @@ import java.math.*;
 class Player{
 	public static void main(String args[]){
 		Scanner in = new Scanner(System.in);
-		int gameTurn = 0;
+		int turn = 0;
 		while(true){
-			Manager man = new Manager(in, gameTurn);
+			Manager man = new Manager(in, turn);
 			CommandGroup command = man.getCommand();
 			System.out.println(command.toString());
-			gameTurn++;
+			turn++;
 		}
 	}
 }
