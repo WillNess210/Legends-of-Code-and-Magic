@@ -7,8 +7,9 @@ class Player{
 	public static void main(String args[]){
 		Scanner in = new Scanner(System.in);
 		int turn = 0;
+		Manager man = new Manager();
 		while(true){
-			Manager man = new Manager(in, turn);
+			man.update(in, turn);
 			CommandGroup command = man.getCommand();
 			System.out.println(command.toString());
 			turn++;
@@ -21,7 +22,12 @@ class Manager{
 	User myself, opp;
 	int turn;
 	ArrayList<Card> draftCards = new ArrayList<Card>();
-	public Manager(Scanner in, int turn){
+	public Manager() {
+		myself = null;
+		opp = null;
+		turn = -1;
+	}
+	public void update(Scanner in, int turn){
 		myself = new User(in);
 		opp = new User(in);
 		this.turn = turn;
