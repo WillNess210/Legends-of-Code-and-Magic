@@ -36,6 +36,7 @@ class Manager{
 		for(int i = 0; i < cardCount; i++){
 			Card newCard = new Card(in, i);
 			if(turn < 30){
+				newCard.setId(i);
 				draftCards.add(newCard);
 			}else{
 				if(newCard.getType() == 0 && newCard.isMine()){ // CREATURE
@@ -68,12 +69,15 @@ class Manager{
 		// CHOOSING DRAFT CARD
 		Card toDraft = null;
 		float bestScore = -10000000;
-		for(int i = 0; i < draftCards.size(); i++) {
+		for(int i = draftCards.size()-3; i < draftCards.size(); i++) {
 			float score = myself.scoreDraftCard(draftCards.get(i));
+			System.err.println(draftCards.get(i).toString() + " score:" + score);
 			if(score > bestScore) {
 				toDraft = draftCards.get(i);
+				bestScore = score;
 			}
 		}
+		System.err.println("Drafting " + toDraft.getId());
 		Constants.draft.add(toDraft); // adding so can keep track
 		// SUBMITTING COMMAND
 		toReturn.addCommand(Constants.DRAFT, toDraft);
@@ -181,7 +185,7 @@ class Command{
 				toReturn = "USE";
 				break;
 			case Constants.DRAFT:
-				toReturn = "PICK " + a.getDraftPos();
+				toReturn = "PICK " + a.getId();
 				return toReturn;
 			case Constants.SUMMON:
 				toReturn = "SUMMON";
@@ -418,6 +422,9 @@ class Card{
 	public boolean ward() {
 		return this.getAbilities().contains("W");
 	}
+	public String toString() {
+		return "type:" + this.getNumber() + " id:" + this.getId() + " att:" + this.getAttack() + " def:" + this.getDefense() + "abil:" + this.getAbilities() + " cost:" + this.getCost(); 
+	}
 }
 
 class Creature extends Card{
@@ -426,7 +433,7 @@ class Creature extends Card{
 				a.getAbilities(), a.getMyHealthChange(), a.getOpponentHealthChange(), a.getCardDraw());
 	}
 	float getDraftScore(){
-		float score = this.getAttack() + this.getDefense() - (this.getCost() * 2);
+		float score = (float) ((Math.max(0.5, this.getAttack()) * Math.max(1, this.getDefense()))/(this.getCost() * this.getCost()));
 		if(this.breakthrough()) {
 			score += Math.abs(score)*0.2;
 		}
@@ -457,14 +464,33 @@ class Item extends Card{
 		type = a.getType();
 	}
 	float getDraftScore(){
-		if(type == Constants.GREEN){
-			return this.getAttack() + this.getDefense() - this.getCost() * 2;
+		float score = 0;
+		if(type == Constants.GREEN) {
+			score = (float) ((Math.max(0.5, this.getAttack()) * Math.max(1, this.getDefense()))/this.getCost());
 		}else if(type == Constants.RED){
-			return -this.getAttack() - this.getDefense() - this.getCost() * 2 + this.getCardDraw();
+			score = (float) (-(Math.max(0.5, this.getAttack()) * -Math.max(1, this.getDefense()))/this.getCost());
 		}else if(type == Constants.BLUE){
-			return -this.getOpponentHealthChange() + this.getMyHealthChange() + this.getCardDraw() - this.getCost()*2;
+			score = -this.getOpponentHealthChange() + this.getMyHealthChange() + this.getCardDraw() - this.getCost()*2;
 		}
-		return -9999999;
+		if(this.breakthrough()) {
+			score += Math.abs(score)*0.2;
+		}
+		if(this.charge()) {
+			score += Math.abs(score)*0.2;
+		}
+		if(this.drain()) {
+			score += Math.abs(score)*0.2;
+		}
+		if(this.guard()) {
+			score += Math.abs(score)*0.4;
+		}
+		if(this.lethal()) {
+			score += Math.abs(score)*0.2;
+		}
+		if(this.ward()) {
+			score += Math.abs(score)*0.2;
+		}
+		return score;
 	}
 }
 
