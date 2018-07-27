@@ -22,7 +22,7 @@ class Manager{
 	User myself, opp;
 	int turn;
 	ArrayList<Card> draftCards = new ArrayList<Card>();
-	public Manager() {
+	public Manager(){
 		myself = null;
 		opp = null;
 		turn = -1;
@@ -69,10 +69,10 @@ class Manager{
 		// CHOOSING DRAFT CARD
 		Card toDraft = null;
 		float bestScore = -10000000;
-		for(int i = draftCards.size()-3; i < draftCards.size(); i++) {
+		for(int i = draftCards.size() - 3; i < draftCards.size(); i++){
 			float score = myself.scoreDraftCard(draftCards.get(i));
 			System.err.println(draftCards.get(i).toString() + " score:" + score);
-			if(score > bestScore) {
+			if(score > bestScore){
 				toDraft = draftCards.get(i);
 				bestScore = score;
 			}
@@ -86,21 +86,21 @@ class Manager{
 	public CommandGroup getTurnCommand(){
 		CommandGroup toReturn = new CommandGroup();
 		// SUMMONING LOGIC
-		for(int i = 0; i < myself.creaturesInHand.size(); i++) {
-			if(myself.getMana() >= myself.creaturesInHand.get(i).getCost()) {
+		for(int i = 0; i < myself.creaturesInHand.size(); i++){
+			if(myself.getMana() >= myself.creaturesInHand.get(i).getCost()){
 				toReturn.addCommand(Constants.SUMMON, myself.creaturesInHand.get(i));
 				myself.changeMana(-myself.creaturesInHand.get(i).getCost());
 			}
 		}
 		// ATTACK LOGIC
 		Creature creatureToAttack = null; // stay null if want to attack opponent
-		for(int i = 0; i < opp.creaturesOnBoard.size(); i++) {
+		for(int i = 0; i < opp.creaturesOnBoard.size(); i++){
 			Creature opCreature = opp.creaturesOnBoard.get(i);
-			if(opCreature.guard()) {
+			if(opCreature.guard()){
 				creatureToAttack = opCreature;
 			}
 		}
-		for(int i = 0; i < myself.creaturesOnBoard.size(); i++) {
+		for(int i = 0; i < myself.creaturesOnBoard.size(); i++){
 			toReturn.addCommand(Constants.ATTACK, myself.creaturesOnBoard.get(i), creatureToAttack);
 		}
 		return toReturn;
@@ -168,7 +168,7 @@ class Command{
 		this.type = type;
 		this.a = a;
 		this.b = b;
-		if(this.b == null) { // null Card b means to attack opponent
+		if(this.b == null){ // null Card b means to attack opponent
 			attackOp = true;
 		}
 	}
@@ -275,14 +275,14 @@ class User{
 		if(b.isCreature()){
 			Creature a = new Creature(b);
 			float score = a.getDraftScore();
-			if(numCreatures >= MAXCREATURES) {
+			if(numCreatures >= MAXCREATURES){
 				score -= 10000;
 			}
 			return score;
 		}else{
 			Item a = new Item(b);
 			float score = a.getDraftScore();
-			if(numItems >= MAXITEMS) {
+			if(numItems >= MAXITEMS){
 				score -= 10000;
 			}
 			return score;
@@ -404,26 +404,27 @@ class Card{
 	public boolean isMine(){
 		return this.location >= 0;
 	}
-	public boolean breakthrough() {
+	public boolean breakthrough(){
 		return this.getAbilities().contains("B");
 	}
-	public boolean charge() {
+	public boolean charge(){
 		return this.getAbilities().contains("C");
 	}
-	public boolean drain() {
+	public boolean drain(){
 		return this.getAbilities().contains("D");
 	}
-	public boolean guard() {
+	public boolean guard(){
 		return this.getAbilities().contains("G");
 	}
-	public boolean lethal() {
+	public boolean lethal(){
 		return this.getAbilities().contains("L");
 	}
-	public boolean ward() {
+	public boolean ward(){
 		return this.getAbilities().contains("W");
 	}
-	public String toString() {
-		return "type:" + this.getNumber() + " id:" + this.getId() + " att:" + this.getAttack() + " def:" + this.getDefense() + "abil:" + this.getAbilities() + " cost:" + this.getCost(); 
+	public String toString(){
+		return "type:" + this.getNumber() + " id:" + this.getId() + " att:" + this.getAttack() + " def:"
+				+ this.getDefense() + "abil:" + this.getAbilities() + " cost:" + this.getCost();
 	}
 }
 
@@ -433,25 +434,18 @@ class Creature extends Card{
 				a.getAbilities(), a.getMyHealthChange(), a.getOpponentHealthChange(), a.getCardDraw());
 	}
 	float getDraftScore(){
-		float score = (float) ((Math.max(0.5, this.getAttack()) * Math.max(1, this.getDefense()))/(this.getCost() * this.getCost()));
-		if(this.breakthrough()) {
-			score += Math.abs(score)*0.2;
-		}
-		if(this.charge()) {
-			score += Math.abs(score)*0.2;
-		}
-		if(this.drain()) {
-			score += Math.abs(score)*0.2;
-		}
-		if(this.guard()) {
-			score += Math.abs(score)*0.4;
-		}
-		if(this.lethal()) {
-			score += Math.abs(score)*0.2;
-		}
-		if(this.ward()) {
-			score += Math.abs(score)*0.2;
-		}
+		float score = 0;
+		score += this.getAttack() * 1.0;
+		score += this.getDefense() * 1.0;
+		score += -this.getCost() * 2.0;
+		score += this.getCardDraw() * 1.0;
+		// abilities
+		score += this.breakthrough() ? 1 : 0;
+		score += this.charge() ? 1 : 0;
+		score += this.drain() ? 1 : 0;
+		score += this.guard() ? 2 : 0;
+		score += this.lethal() ? 1 : 0;
+		score += this.ward() ? 1 : 0;
 		return score;
 	}
 }
@@ -465,31 +459,27 @@ class Item extends Card{
 	}
 	float getDraftScore(){
 		float score = 0;
-		if(type == Constants.GREEN) {
-			score = (float) ((Math.max(0.5, this.getAttack()) * Math.max(1, this.getDefense()))/this.getCost());
-		}else if(type == Constants.RED){
-			score = (float) (-(Math.max(0.5, this.getAttack()) * -Math.max(1, this.getDefense()))/this.getCost());
-		}else if(type == Constants.BLUE){
-			score = -this.getOpponentHealthChange() + this.getMyHealthChange() + this.getCardDraw() - this.getCost()*2;
-		}
-		if(this.breakthrough()) {
-			score += Math.abs(score)*0.2;
-		}
-		if(this.charge()) {
-			score += Math.abs(score)*0.2;
-		}
-		if(this.drain()) {
-			score += Math.abs(score)*0.2;
-		}
-		if(this.guard()) {
-			score += Math.abs(score)*0.4;
-		}
-		if(this.lethal()) {
-			score += Math.abs(score)*0.2;
-		}
-		if(this.ward()) {
-			score += Math.abs(score)*0.2;
-		}
+		if(this.type == Constants.GREEN) {
+			score += this.getAttack() * 1.0;
+			score += this.getDefense() * 1.0;
+		}else if(this.type == Constants.RED) {
+			score -= this.getAttack() * 1.0;
+			score -= this.getDefense() * 1.0;
+		}else if(this.type == Constants.BLUE) {
+			score -= this.getDefense() * 1.0;
+			score += this.getMyHealthChange() * 1.0;
+			score -= this.getOpponentHealthChange() * 1.0;
+		}	
+		score += -this.getCost() * 2.0;
+		score += this.getCardDraw() * 1.0;
+		// abilities
+		score += this.breakthrough() ? 1 : 0;
+		score += this.charge() ? 1 : 0;
+		score += this.drain() ? 1 : 0;
+		score += this.guard() ? 2 : 0;
+		score += this.lethal() ? 1 : 0;
+		score += this.ward() ? 1 : 0;
+		score *= 0.75; // devalues items over creatures
 		return score;
 	}
 }
@@ -508,22 +498,22 @@ class Constants{
 	public static final int BLUE = 3;
 	// DRAFTED CARDS
 	public static ArrayList<Card> draft = new ArrayList<Card>();
-	public static int getNumDrafted() {
+	public static int getNumDrafted(){
 		return draft.size();
 	}
-	public static int getNumItemsDrafted() {
+	public static int getNumItemsDrafted(){
 		int count = 0;
-		for(int i = 0; i < draft.size(); i++) {
-			if(draft.get(i).isCreature() == false) {
+		for(int i = 0; i < draft.size(); i++){
+			if(draft.get(i).isCreature() == false){
 				count++;
 			}
 		}
 		return count;
 	}
-	public static int getNumCreaturesDrafted() {
+	public static int getNumCreaturesDrafted(){
 		int count = 0;
-		for(int i = 0; i < draft.size(); i++) {
-			if(draft.get(i).isCreature()) {
+		for(int i = 0; i < draft.size(); i++){
+			if(draft.get(i).isCreature()){
 				count++;
 			}
 		}
